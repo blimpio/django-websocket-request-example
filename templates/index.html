@@ -40,6 +40,10 @@
                 background: #000;
                 color: #00CC00;
             }
+
+            #log .error {
+                color: red;
+            }
         </style>
 
     </head>
@@ -60,12 +64,12 @@
                 <p>
                     <select class="language">
                         <option value="python">Python</option>
-                        <option value="javascript">JavaScript</option>
-                        <option value="ruby">Ruby</option>
+                        <option value="js">JavaScript</option>
+                        <option value="rb">Ruby</option>
                     </select>
                 </p>
                 <p>
-                    <button class="send">Create</button>
+                    <button class="send" disabled>Create</button>
                 </p>
             </div>
 
@@ -118,140 +122,156 @@
 
         $(function () {
 
-        var conn = null;
+            var conn = null;
 
-        function log(msg) {
-            var control = $('#log');
-            control.html(control.html() + msg + '<br/>');
-            control.scrollTop(control.scrollTop() + 1000);
-        }
+            function log(msg) {
+                var control = $('#log');
+                control.html(control.html() + msg + '<br/>');
+                control.scrollTop(control.scrollTop() + 1000);
+            };
 
-        function connect() {
-            disconnect();
+            function logError(msg) {
+                log('<span class="error">' + msg + '</span>');
+            };
 
-            var transports = $('#protocols input:checked').map(function () {
-                return $(this).attr('id');
-            }).get();
+            function connect() {
+                disconnect();
 
-            conn = new SockJS('http://' + window.location.host + '/ws/api', transports);
+                var transports = $('#protocols input:checked').map(function () {
+                    return $(this).attr('id');
+                }).get();
 
-            log('Connecting...');
+                conn = new SockJS('http://' + window.location.host + '/ws/api', transports);
 
-            conn.onopen = function () {
-                log('Connected.');
+                log('Connecting...');
+
+                conn.onopen = function () {
+                    log('Connected.');
+                    update_ui();
+
+                    $('.send').attr('disabled', false);
+
+                    var message = {
+                        'url': '/api/snippets/'
+                    };
+
+                    conn.send(JSON.stringify(message));
+                };
+
+                conn.onmessage = function (e) {
+                    log('Received: ' + JSON.stringify(e.data));
+
+                    var responseURL = e.data.response.url;
+                    var responseData = e.data.response.data;
+
+                    if (responseURL === '/api/snippets/') {
+                        $snippets = $('.snippets');
+
+                        if (!$.isArray(responseData)) {
+                            responseData = [responseData];
+                        }
+
+                        $.each(responseData, function (index, value) {
+                            console.log(value);
+
+                            if(!value.id && !value.title) {
+                                logError(JSON.stringify(value));
+                                return false;
+                            }
+
+                            var snippet = '<li> \
+                            <a class="snippet" href="#" data-id="' + value.id + '">' + value.title + '</a> \
+                        </li>';
+
+                            if ($.inArray(value.id, loadedSnippets) === -1) {
+                                $snippets.append(snippet);
+                                loadedSnippets.push(value.id);
+                            }
+                        });
+                    } else if (responseURL.match(/highlight/)) {
+                        updateIframe(responseData);
+                    }
+                };
+                conn.onclose = function () {
+                    log('Disconnected.');
+                    conn = null;
+                    update_ui();
+
+                    $('.send').attr('disabled', true);
+                };
+            };
+
+            function disconnect() {
+                if (conn != null) {
+                    log('Disconnecting...');
+
+                    conn.close();
+                    conn = null;
+
+                    update_ui();
+                }
+            };
+
+            function update_ui() {
+                var msg = '';
+
+                if (conn == null || conn.readyState != SockJS.OPEN) {
+                    $('#status').text('disconnected');
+                    $('#connect').text('Connect');
+                } else {
+                    $('#status').text('connected (' + conn.protocol + ')');
+                    $('#connect').text('Disconnect');
+                }
+            };
+
+            $('#connect').click(function () {
+                if (conn == null) {
+                    connect();
+                } else {
+                    disconnect();
+                }
+
                 update_ui();
+                return false;
+            });
 
+            $(document).on('click', '.snippet', function (event) {
+                event.preventDefault();
+                var snippetId = $(event.currentTarget).data('id');
                 var message = {
-                    'url': '/api/snippets/'
+                    'url': '/api/snippets/' + snippetId + '/highlight/'
                 };
 
                 conn.send(JSON.stringify(message));
-            };
+            });
 
-            conn.onmessage = function (e) {
-                log('Received: ' + e.data);
-                var responseURL = e.data.response.url;
-                var responseData = e.data.response.data;
-
-                if (responseURL === '/api/snippets/') {
-                    $snippets = $('.snippets');
-
-                    if (!$.isArray(responseData)) {
-                        responseData = [responseData];
+            $(document).on('click', '.send', function (event) {
+                event.preventDefault();
+                var $title = $('.title');
+                var $code = $('.code');
+                var $language = $('.language');
+                var message = {
+                    'url': '/api/snippets/',
+                    'method': 'POST',
+                    'data': {
+                        'title': $title.val(),
+                        'code': $code.val(),
+                        'language': $language.val(),
+                        'style': 'monokai'
                     }
+                };
 
-                    $.each(responseData, function (index, value) {
-                        var snippet = '<li> \
-                        <a class="snippet" href="#" data-id="' + value.id + '">' + value.title + '</a> \
-                    </li>';
+                conn.send(JSON.stringify(message));
 
-                        if ($.inArray(value.id, loadedSnippets) === -1) {
-                            $snippets.append(snippet);
-                            loadedSnippets.push(value.id);
-                        }
-                    });
-                } else if (responseURL.match(/highlight/)) {
-                    updateIframe(responseData);
-                }
+                $title.val('');
+                $code.val('');
+            });
+
+            function updateIframe(html) {
+                var iframe = document.createElement('iframe');
+                iframe.src = 'data:text/html;charset=utf-8,' + encodeURI(html);
+                $('#iframe-container').html(iframe);
             };
-            conn.onclose = function () {
-                log('Disconnected.');
-                conn = null;
-                update_ui();
-            };
-        };
-
-        function disconnect() {
-            if (conn != null) {
-                log('Disconnecting...');
-
-                conn.close();
-                conn = null;
-
-                update_ui();
-            }
-        };
-
-        function update_ui() {
-            var msg = '';
-
-            if (conn == null || conn.readyState != SockJS.OPEN) {
-                $('#status').text('disconnected');
-                $('#connect').text('Connect');
-            } else {
-                $('#status').text('connected (' + conn.protocol + ')');
-                $('#connect').text('Disconnect');
-            }
-        };
-
-        $('#connect').click(function () {
-            if (conn == null) {
-                connect();
-            } else {
-                disconnect();
-            }
-
-            update_ui();
-            return false;
-        });
-
-        $(document).on('click', '.snippet', function (event) {
-            event.preventDefault();
-            var snippetId = $(event.currentTarget).data('id');
-            var message = {
-                'url': '/api/snippets/' + snippetId + '/highlight/'
-            };
-
-            conn.send(JSON.stringify(message));
-        });
-
-        $(document).on('click', '.send', function (event) {
-            event.preventDefault();
-            var $title = $('.title');
-            var $code = $('.code');
-            var $language = $('.language');
-            var message = {
-                'url': '/api/snippets/',
-                'method': 'POST',
-                'data': {
-                    'title': $title.val(),
-                    'code': $code.val(),
-                    'language': $language.val(),
-                    'style': 'monokai'
-                }
-            };
-
-            conn.send(JSON.stringify(message));
-
-            $title.val('');
-            $code.val('');
-        });
-
-        function updateIframe(html) {
-            var iframe = document.createElement('iframe');
-            iframe.src = 'data:text/html;charset=utf-8,' + encodeURI(html);
-            $('#iframe-container').html(iframe);
-        }
         });
 
     </script>
