@@ -1,4 +1,5 @@
 import os
+import logging
 
 from tornado import web, ioloop
 from sockjs.tornado import SockJSRouter, SockJSConnection
@@ -9,6 +10,9 @@ os.environ['DJANGO_SETTINGS_MODULE'] = 'wsrequest_example.settings'
 from wsrequest import WebSocketRequest
 
 
+logging.getLogger().setLevel(logging.INFO)
+
+
 class IndexHandler(web.RequestHandler):
     def get(self, url='/'):
         self.render('templates/index.html')
@@ -16,6 +20,8 @@ class IndexHandler(web.RequestHandler):
 
 class RESTAPIConnection(SockJSConnection):
     def on_message(self, data):
+        logging.info(self.session.conn_info.ip)
+        logging.info(self.session.conn_info.headers)
         request = WebSocketRequest(data)
         response = request.get_response()
         self.send({
@@ -27,10 +33,7 @@ class RESTAPIConnection(SockJSConnection):
 
 
 if __name__ == '__main__':
-    import logging
     port = int(os.environ.get("PORT", 8080))
-
-    logging.getLogger().setLevel(logging.INFO)
 
     Router = SockJSRouter(RESTAPIConnection, '/ws/api')
 
