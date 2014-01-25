@@ -161,8 +161,15 @@
                 conn.onmessage = function (e) {
                     log('Received: ' + e.data);
 
+                    console.log(e.data);
+
                     var responseURL = e.data.response.url;
                     var responseData = e.data.response.data;
+
+                    if(responseData.detail) {
+                        logError(JSON.stringify(responseData));
+                        return false;
+                    }
 
                     if (responseURL === '/api/snippets/') {
                         $snippets = $('.snippets');
@@ -178,8 +185,8 @@
                             }
 
                             var snippet = '<li> \
-                            <a class="snippet" href="#" data-id="' + value.id + '">' + value.title + '</a> \
-                        </li>';
+                                <a class="snippet" href="#" data-id="' + value.id + '">' + value.title + '</a> \
+                            </li>';
 
                             if ($.inArray(value.id, loadedSnippets) === -1) {
                                 $snippets.append(snippet);

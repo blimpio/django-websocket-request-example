@@ -97,3 +97,12 @@ STATIC_URL = '/static/'
 TEMPLATE_DIRS = (
     os.path.normpath(os.path.join(BASE_DIR, 'templates')),
 )
+
+REST_FRAMEWORK = {
+    'DEFAULT_THROTTLE_CLASSES': (
+        'rest_framework.throttling.AnonRateThrottle',
+    ),
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': os.environ.get('ANON_THROTTLE_RATE', '10/day'),
+    }
+}
