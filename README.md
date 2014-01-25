@@ -3,11 +3,11 @@
 ## Overview
 This example application uses:
 
-- Django
-- Django REST framework
-- SockJS
-- Tornado
-- django-websocket-request
+- [django-websocket-request](https://github.com/GetBlimp/django-websocket-request)
+- [Django](https://www.djangoproject.com)
+- [Django REST framework](http://django-rest-framework.org)
+- [SockJS](http://sockjs.org)
+- [Tornado](https://github.com/mrjoes/sockjs-tornado/)
 
 ## Live demo
 
