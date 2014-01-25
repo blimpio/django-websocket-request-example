@@ -13,11 +13,11 @@
             }
             #snippets {
                 float: left;
-                width: 300px;
+                width: 200px;
             }
             #iframe-wrapper {
                 float: left;
-                width: 400px;
+                width: 425px;
             }
             .controls {
                 float: left;
@@ -33,7 +33,7 @@
             }
 
             #log {
-                width: 300px;
+                width: 500px;
                 height: 200px;
                 overflow: scroll;
                 border: 1px solid #000;
@@ -159,7 +159,7 @@
                 };
 
                 conn.onmessage = function (e) {
-                    log('Received: ' + JSON.stringify(e.data));
+                    log('Received: ' + e.data);
 
                     var responseURL = e.data.response.url;
                     var responseData = e.data.response.data;
@@ -172,8 +172,6 @@
                         }
 
                         $.each(responseData, function (index, value) {
-                            console.log(value);
-
                             if(!value.id && !value.title) {
                                 logError(JSON.stringify(value));
                                 return false;
@@ -269,6 +267,7 @@
 
             function updateIframe(html) {
                 var iframe = document.createElement('iframe');
+                iframe.width = 300;
                 iframe.src = 'data:text/html;charset=utf-8,' + encodeURI(html);
                 $('#iframe-container').html(iframe);
             };
