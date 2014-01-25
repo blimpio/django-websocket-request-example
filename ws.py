@@ -28,6 +28,7 @@ class RESTAPIConnection(SockJSConnection):
 
 if __name__ == '__main__':
     import logging
+    port = int(os.environ.get("PORT", 8080))
 
     logging.getLogger().setLevel(logging.INFO)
 
@@ -37,8 +38,8 @@ if __name__ == '__main__':
         [(r'/', IndexHandler)] + Router.urls
     )
 
-    app.listen(8080)
+    app.listen(port)
 
-    logging.info(' [*] Listening on 0.0.0.0:8080')
+    logging.info(' [*] Listening on 0.0.0.0:{}'.format(port))
 
     ioloop.IOLoop.instance().start()
