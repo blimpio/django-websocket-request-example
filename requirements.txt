@@ -4,6 +4,7 @@ backports.ssl-match-hostname==3.4.0.2
 dj-database-url==0.2.2
 django-websocket-request==0.1.0
 djangorestframework==2.3.12
+psycopg2==2.5.2
 sockjs-tornado==1.0.0
 tornado==3.2
 wsgiref==0.1.2
