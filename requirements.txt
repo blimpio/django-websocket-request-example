@@ -1,0 +1,9 @@
+Django==1.6.1
+Pygments==1.6
+backports.ssl-match-hostname==3.4.0.2
+dj-database-url==0.2.2
+django-websocket-request==0.1.0
+djangorestframework==2.3.12
+sockjs-tornado==1.0.0
+tornado==3.2
+wsgiref==0.1.2
