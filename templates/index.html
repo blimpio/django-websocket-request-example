@@ -227,24 +227,24 @@
 
         $(document).on('click', '.send', function (event) {
             event.preventDefault();
-            var title = $('.title').val();
-            var code = $('.code').val();
-            var language = $('.language').val();
+            var $title = $('.title');
+            var $code = $('.code');
+            var $language = $('.language');
             var message = {
                 'url': '/api/snippets/',
                 'method': 'POST',
                 'data': {
-                    'title': title,
-                    'code': code,
-                    'language': language,
+                    'title': $title.val(),
+                    'code': $code.val(),
+                    'language': $language.val(),
                     'style': 'monokai'
                 }
             };
 
             conn.send(JSON.stringify(message));
 
-            title.val('');
-            code.val('');
+            $title.val('');
+            $code.val('');
         });
 
         function updateIframe(html) {
