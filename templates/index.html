@@ -121,7 +121,13 @@
         </div>
     </body>
     <script src="http://code.jquery.com/jquery-2.1.0.min.js"></script>
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/handlebars.js/1.3.0/handlebars.min.js"></script>
     <script src="http://cdn.sockjs.org/sockjs-0.3.min.js"></script>
+    <script id="snippet-template" type="text/x-handlebars-template">
+        <li>
+            <a class="snippet" href="#" data-id="{{!id}}">{{!title}}</a>
+        </li>
+    </script>
     <script>
         var loadedSnippets = [];
 
@@ -171,7 +177,7 @@
                     var responseURL = e.data.response.url;
                     var responseData = e.data.response.data;
 
-                    if(responseData.detail) {
+                    if($.isArray(responseData.title) || $.isArray(responseData.code)) {
                         logError(JSON.stringify(responseData));
                         return false;
                     }
@@ -189,9 +195,14 @@
                                 return false;
                             }
 
-                            var snippet = '<li> \
-                                <a class="snippet" href="#" data-id="' + value.id + '">' + value.title + '</a> \
-                            </li>';
+                            var context = {
+                                id: value.id,
+                                title: value.title
+                            };
+
+                            var source   = $("#snippet-template").html();
+                            var template = Handlebars.compile(source);
+                            var snippet = template(context);
 
                             if ($.inArray(value.id, loadedSnippets) === -1) {
                                 $snippets.append(snippet);
