@@ -21,8 +21,9 @@ Throttling is enabled and snippets are erased periodically. If you run into any 
 
 ## Running locally
 
-```
+``` bash
 $ pip install -r requirements.txt
+$ python manage.py syncdb
 $ python ws.py
 $ open http://127.0.0.1:8080
 ```
